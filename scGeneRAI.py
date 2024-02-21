@@ -158,6 +158,8 @@ class scGeneRAI:
         if descriptors is not None:
             self.onehotter = OneHotter()
             one_hot_descriptors = self.onehotter.make_one_hot_new(descriptors)
+            # data.reset_index(drop=True, inplace=True)
+            # one_hot_descriptors.reset_index(drop=True, inplace=True)
             self.data = pd.concat([data, one_hot_descriptors], axis=1)
 
         else:
@@ -260,7 +262,7 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size, lr_decay, de
     optimizer = tc.optim.SGD(neuralnet.parameters(), lr=lr, momentum=0.9) 
     scheduler = ExponentialLR(optimizer, gamma = lr_decay)
 
-    criterion = LogCoshLoss() 
+    criterion = tc.nn.MSELoss()
     testlosses, epoch_list, network_list = [], [], []
 
     neuralnet.train().to(device)
@@ -307,15 +309,15 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size, lr_decay, de
                 network_list.append(neuralnet.state_dict())
                 break
 
-            for masked_data, mask, full_data in traintestloader:
-                masked_data = masked_data.to(device)
-                mask = mask.to(device)
-                full_data = full_data.to(device)
-                with tc.no_grad():
-                    pred = neuralnet(masked_data)
-                traintestloss = criterion(pred[mask==0], full_data[mask==0])
-                #print(epoch, 'trainloss:', traintestloss, 'testloss:', testloss)
-                break
+            # for masked_data, mask, full_data in traintestloader:
+            #     masked_data = masked_data.to(device)
+            #     mask = mask.to(device)
+            #     full_data = full_data.to(device)
+            #     with tc.no_grad():
+            #         pred = neuralnet(masked_data)
+            #     traintestloss = criterion(pred[mask==0], full_data[mask==0])
+            #     #print(epoch, 'trainloss:', traintestloss, 'testloss:', testloss)
+            #     break
     
     return tc.tensor(testlosses), epoch_list, network_list
 
