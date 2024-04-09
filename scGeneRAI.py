@@ -220,10 +220,14 @@ class scGeneRAI:
         
         target_gene_range = self.simple_features if remove_descriptors else data_tensor_LRP.shape[1]
 
+        result = []
+
         for sample_id, sample_name in enumerate(sample_names_LRP):
-            calc_all_paths(self.nn, data_tensor_LRP, sample_id, sample_name, feature_names_LRP, target_gene_range = target_gene_range, PATH=PATH, batch_size=100, LRPau = LRPau, device = tc.device(device_name))
-        
-        
+            print(sample_id)
+            path = calc_all_paths(self.nn, data_tensor_LRP, sample_id, sample_name, feature_names_LRP, target_gene_range = target_gene_range, PATH=PATH, batch_size=100, LRPau = LRPau, device = tc.device(device_name))
+            result.append(path)
+
+        return result
 
 class OneHotter:
     def __init__(self):
@@ -268,8 +272,8 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size, lr_decay, de
     neuralnet.train().to(device)
 
     for epoch in tqdm(range(epochs)):
-        if epoch<5:
-            optimizer.param_groups[0]['lr']=lr/5*(epoch+1)
+        # if epoch<5:
+        #     optimizer.param_groups[0]['lr']=lr/5*(epoch+1)
 
         trainset = Dataset_train(train_data)
         trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
@@ -388,8 +392,8 @@ def calc_all_paths(neuralnet, test_data, sample_id, sample_name, featurenames, t
         end_frame = end_frame[end_frame['source_gene']>end_frame['target_gene']]
 
 
-
-    end_frame.to_csv(end_result_path)
+    return end_frame
+    # end_frame.to_csv(end_result_path)
 
 
 
