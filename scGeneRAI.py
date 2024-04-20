@@ -205,7 +205,7 @@ class scGeneRAI:
         if descriptors is not None:
             one_hot_descriptors = self.onehotter.make_one_hot(descriptors)
             assert one_hot_descriptors.shape[0] == data.shape[0], 'descriptors ({}) need to have same sample size as data ({})'.format(one_hot_descriptors.shape[0],data.shape[0])
-            data_extended = pd.concat([data, one_hot_descriptors], axis=1)
+            data_extended = pd.concat([data.reset_index(), one_hot_descriptors], axis=1)
    
         else:
             data_extended = data
@@ -220,12 +220,19 @@ class scGeneRAI:
         
         target_gene_range = self.simple_features if remove_descriptors else data_tensor_LRP.shape[1]
 
-        result = []
+        result = pd.DataFrame(columns=['LRP', 'source_gene', 'target_gene'])
 
         for sample_id, sample_name in enumerate(sample_names_LRP):
             print(sample_id)
             path = calc_all_paths(self.nn, data_tensor_LRP, sample_id, sample_name, feature_names_LRP, target_gene_range = target_gene_range, PATH=PATH, batch_size=100, LRPau = LRPau, device = tc.device(device_name))
-            result.append(path)
+            network_data = pd.concat([result, path])
+            network_data['LRP'] = np.abs(network_data['LRP'])
+            network_data = network_data[network_data['source_gene'] != network_data['target_gene']]
+
+            average_network = network_data[['LRP', 'source_gene', 'target_gene']].groupby(
+                    ['source_gene', 'target_gene']).sum().reset_index()
+            result = average_network
+            # result.append(path)
 
         return result
 
