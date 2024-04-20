@@ -149,8 +149,31 @@ class NN(nn.Module):
 
 
 class scGeneRAI:
-    def __init__(self):
-        pass
+    def __init__(self, data,model_depth, descriptors = None):
+        # self.onehotter = OneHotter()
+        # self.nfeatures = 2009
+        # self.nn = NN(2*(2009), 2009, 4018, 2)
+
+        self.simple_features = data.shape[1]
+        if descriptors is not None:
+            self.onehotter = OneHotter()
+            one_hot_descriptors = self.onehotter.make_one_hot_new(descriptors)
+            # data.reset_index(drop=True, inplace=True)
+            # one_hot_descriptors.reset_index(drop=True, inplace=True)
+            self.data = pd.concat([data, one_hot_descriptors], axis=1)
+
+        else:
+            self.data = data
+
+        self.nsamples, self.nfeatures = self.data.shape
+        self.hidden = 2 * self.nfeatures
+        self.depth = model_depth
+
+        self.sample_names = self.data.index
+        self.feature_names = self.data.columns
+        self.data_tensor = tc.tensor(np.array(self.data)).float()
+
+        self.nn = NN(2 * (self.nfeatures), self.nfeatures, self.hidden, self.depth)
 
     def fit(self, data, nepochs, model_depth, lr=2e-2, batch_size=5, lr_decay = 0.995, descriptors = None, early_stopping = True, device_name = 'cpu'):
 
@@ -205,7 +228,8 @@ class scGeneRAI:
         if descriptors is not None:
             one_hot_descriptors = self.onehotter.make_one_hot(descriptors)
             assert one_hot_descriptors.shape[0] == data.shape[0], 'descriptors ({}) need to have same sample size as data ({})'.format(one_hot_descriptors.shape[0],data.shape[0])
-            data_extended = pd.concat([data.reset_index(), one_hot_descriptors], axis=1)
+            one_hot_descriptors = one_hot_descriptors.reset_index(drop=True)
+            data_extended = pd.concat([data, one_hot_descriptors], axis=1, ignore_index=True)
    
         else:
             data_extended = data
