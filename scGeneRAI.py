@@ -228,8 +228,9 @@ class scGeneRAI:
         if descriptors is not None:
             one_hot_descriptors = self.onehotter.make_one_hot(descriptors)
             assert one_hot_descriptors.shape[0] == data.shape[0], 'descriptors ({}) need to have same sample size as data ({})'.format(one_hot_descriptors.shape[0],data.shape[0])
-            one_hot_descriptors = one_hot_descriptors.reset_index(drop=True)
-            data_extended = pd.concat([data, one_hot_descriptors], axis=1, ignore_index=True)
+            # one_hot_descriptors = one_hot_descriptors.reset_index(drop=True, inplace=True)
+            one_hot_descriptors.index = range(data.index[0] , data.index[0] + len(data))
+            data_extended = pd.concat([data, one_hot_descriptors], axis=1)
    
         else:
             data_extended = data
